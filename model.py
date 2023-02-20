@@ -9,7 +9,7 @@ class Model(torch.nn.Module):
         self.score_predictor = torch.nn.Linear(768, 1)
         self.ce_loss_fct = torch.nn.CrossEntropyLoss(ignore_index=1)
         self.aspect_confidence_predictor = torch.nn.Linear(768, 10)
-        self.aspect_rating_predictor = torch.nn.Linear(768, 10)
+        self.aspect_score_predictor = torch.nn.Linear(768, 10)
 
     def shift_tokens_right(self, input_ids, pad_token_id):
         """ Shift input ids one token to the right, and wrap the last non pad token (usually <eos>).
@@ -35,7 +35,7 @@ class Model(torch.nn.Module):
 
         overall_score_pred = self.score_predictor(self.output.encoder_last_hidden_state[:,0,:])
         aspect_conf_pred = self.aspect_confidence_predictor(self.output.encoder_last_hidden_state[:,0,:])
-        aspect_score_pred = self.aspect_rating_predictor(self.output.encoder_last_hidden_state[:,0,:])
+        aspect_score_pred = self.aspect_score_predictor(self.output.encoder_last_hidden_state[:,0,:])
         return F.sigmoid(overall_score_pred), aspect_conf_pred, F.sigmoid(aspect_score_pred), gen_loss
 
 

@@ -15,7 +15,7 @@ from generate import generate
 from scipy.stats import spearmanr, kendalltau, pearsonr
 
 torch.manual_seed(0)
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 device = torch.device('cuda') 
 
 def cal_cor(data1, data2):
@@ -116,7 +116,7 @@ def test(model, tokenizer, test_dataset):
 
 def generate_one(model, input_sentence, tokenizer):
     exmaple = tokenize(tokenizer, input_sentence)
-    res = generate(model, exmaple, tokenizer)   
+    res = generate(model, exmaple, tokenizer)
     return res
 
 def train_model(model, dataset, optimizer, lr_scheduler, tokenizer, epochs, test_dataset):
@@ -189,27 +189,50 @@ def train_model(model, dataset, optimizer, lr_scheduler, tokenizer, epochs, test
 def main():
     # get data loader
     # batch_size = 16
-    batch_size = 1 # set to 16 in real experiment
-    dataset = get_loader(batch_size)
-    test_dataset = get_test_loader(batch_size)
-    # get model
+
     model = get_model()
+    model_path = '4.pt'
+    model.load_state_dict(torch.load(model_path))
     model = model.to(device)
-    model = nn.DataParallel(model)
-    # get optimizer
-    LR = 4e-5
-    ADAM_EPSILON = 1e-8
-    WEIGHT_DECAY = 0.
-    WARMUP_PROPORTION = 0.2
-
-    EPOCH = 5
-    TRAIN_STEP = EPOCH * (len(dataset) + 1)
-    WARMUP_STEP = TRAIN_STEP*WARMUP_PROPORTION
-
-    optimizer, lr_scheduler = get_optimizer(model=model, lr=LR, train_steps=TRAIN_STEP, warmup_steps=WARMUP_STEP, weight_decay=WEIGHT_DECAY, adam_epsilon=ADAM_EPSILON)
     tokenizer = get_tokenizer()
+    story = "Today was a beautiful day at the University of Tokyo. I decided to take a walk around the campus and explore the area. As I walked down the tree-lined street, I noticed a cobblestone street next to a building and trees. I also saw a dice on the ground next to a person. Further down the street, I saw a large white teddy bear in front of a building. I also noticed a white truck driving down the street with leaves on it. Finally, I saw a woman standing in front of a Starbucks sign. It was a pleasant walk and I enjoyed the sights and sounds of the city."
+    tk_story = tokenize(tokenizer, story)
+    a, b, c, d = model(input_ids=tk_story['input_ids'].to(device), attention_masks=tk_story['attention_mask'].to(device))
+    print(a, b, c, d)
 
-    train_model(model, dataset, optimizer, lr_scheduler, tokenizer, EPOCH, test_dataset)
+    story = "Today was a great day. I went for a walk at the University of Tokyo and saw a white van parked on the side of the street. Aiko said, 'Another beautiful day here!' We then saw a group of people walking down a tree-lined street. Aiko pointed out the Yasuda Auditorium and said it was cool. We then played with my favorite Pokemon ball and I succeeded in fetching the toy. Aiko told me that I would get a fish as a reward and I felt so happy. We then saw a Starbucks coffee shop and Aiko suggested we take a break. We sat down and enjoyed the beautiful day. It was a great day and I'm looking forward to the next one."
+    tk_story = tokenize(tokenizer, story)
+    a, b, c, d = model(input_ids=tk_story['input_ids'].to(device), attention_masks=tk_story['attention_mask'].to(device))
+    print(a, b, c, d)
+
+    # batch_size = 1 # set to 16 in real experiment
+    # test_dataset = get_test_loader(batch_size)
+    # with torch.no_grad():
+    #     test(model, tokenizer, test_dataset) 
+    # import ipdb
+    # ipdb.set_trace()
+
+    # batch_size = 1 # set to 16 in real experiment
+    # dataset = get_loader(batch_size)
+    # test_dataset = get_test_loader(batch_size)
+    # # get model
+    # model = get_model()
+    # model = model.to(device)
+    # model = nn.DataParallel(model)
+    # # get optimizer
+    # LR = 4e-5
+    # ADAM_EPSILON = 1e-8
+    # WEIGHT_DECAY = 0.
+    # WARMUP_PROPORTION = 0.2
+
+    # EPOCH = 5
+    # TRAIN_STEP = EPOCH * (len(dataset) + 1)
+    # WARMUP_STEP = TRAIN_STEP*WARMUP_PROPORTION
+
+    # optimizer, lr_scheduler = get_optimizer(model=model, lr=LR, train_steps=TRAIN_STEP, warmup_steps=WARMUP_STEP, weight_decay=WEIGHT_DECAY, adam_epsilon=ADAM_EPSILON)
+    # tokenizer = get_tokenizer()
+
+    # train_model(model, dataset, optimizer, lr_scheduler, tokenizer, EPOCH, test_dataset)
 
 
 if __name__ == "__main__":
